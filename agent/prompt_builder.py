@@ -376,6 +376,11 @@ PLATFORM_HINTS = {
         "downloaded and sent as native photos. Do NOT tell the user you lack file-sending "
         "capability — use MEDIA: syntax whenever a file delivery is appropriate."
     ),
+    "keybase": (
+        "You are in a Keybase team or chat communicating with your user. "
+        "Please do not use markdown as it does not render. "
+        "Keep responses concise and use plain text only."
+    ),
 }
 
 # ---------------------------------------------------------------------------
