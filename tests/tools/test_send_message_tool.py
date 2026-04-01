@@ -12,6 +12,7 @@ from gateway.config import Platform
 from tools.send_message_tool import (
     _parse_target_ref,
     _send_discord,
+    _send_keybase,
     _send_telegram,
     _send_to_platform,
     send_message_tool,
@@ -332,6 +333,25 @@ class TestSendMessageTool:
         assert "error" in result
         assert leaked not in result["error"]
         assert "access_token=***" in result["error"]
+
+
+class TestSendKeybase:
+    def test_send_keybase_uses_keybase_home_and_run_mode_env(self):
+        proc = AsyncMock()
+        proc.returncode = 0
+        proc.communicate = AsyncMock(return_value=(b"", b""))
+
+        with patch("shutil.which", return_value="/home/joe/bin/keybase"), \
+             patch.dict(os.environ, {"KEYBASE_HOME": "/home/joe/.keybase-prod", "KEYBASE_RUN_MODE": "prod"}, clear=False), \
+             patch("asyncio.create_subprocess_exec", new=AsyncMock(return_value=proc)) as create_proc:
+            result = asyncio.run(_send_keybase({"binary": "/home/joe/bin/keybase"}, "croque_monsieur#general", "hello"))
+
+        assert result["success"] is True
+        kwargs = create_proc.await_args.kwargs
+        assert kwargs["env"]["HOME"] == "/home/joe/.keybase-prod"
+        assert kwargs["env"]["KEYBASE_RUN_MODE"] == "prod"
+        # Gateway credentials must not leak to the keybase subprocess
+        assert "ANTHROPIC_API_KEY" not in kwargs["env"]
 
 
 class TestSendTelegramMediaDelivery:

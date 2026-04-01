@@ -685,6 +685,51 @@ async def _send_signal(extra, chat_id, message):
         return _error(f"Signal send failed: {e}")
 
 
+async def _send_keybase(extra, chat_id, message):
+    """Send via keybase CLI (chat send)."""
+    import asyncio
+    import shutil
+
+    kb = (extra.get("binary") if isinstance(extra, dict) else None) or os.getenv("KEYBASE_BIN", "keybase")
+    kb = (kb or "keybase").strip()
+
+    if not shutil.which(kb):
+        return {"error": f"Keybase CLI not found: {kb}"}
+
+    target = str(chat_id).strip()
+    cmd = [kb, "chat", "send"]
+    if "#" in target:
+        team, channel = target.split("#", 1)
+        team = team.strip()
+        channel = channel.strip() or "general"
+        cmd.extend([team, "--channel", channel, message])
+    else:
+        cmd.extend([target, message])
+
+    from gateway.platforms.keybase import _keybase_env
+    env = _keybase_env()
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30.0)
+    except asyncio.TimeoutError:
+        return {"error": "Keybase send timed out after 30s"}
+    except Exception as e:
+        return {"error": f"Keybase send failed: {e}"}
+
+    if proc.returncode != 0:
+        err = (stderr or b"").decode(errors="replace").strip()
+        return {"error": f"Keybase send failed: {err or f'exit {proc.returncode}'}"}
+
+    out = (stdout or b"").decode(errors="replace").strip()
+    return {"success": True, "platform": "keybase", "chat_id": str(chat_id), "raw": out}
+
+
 async def _send_email(extra, chat_id, message):
     """Send via SMTP (one-shot, no persistent connection needed)."""
     import smtplib
