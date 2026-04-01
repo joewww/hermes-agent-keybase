@@ -256,6 +256,11 @@ PLATFORM_HINTS = {
         "only — no markdown, no formatting. SMS messages are limited to ~1600 "
         "characters, so be brief and direct."
     ),
+    "keybase": (
+        "You are in a Keybase team or chat communicating with your user. "
+        "Please do not use markdown as it does not render. "
+        "Keep responses concise and use plain text only."
+    ),
 }
 
 CONTEXT_FILE_MAX_CHARS = 20_000

@@ -59,6 +59,7 @@ class Platform(Enum):
     WEBHOOK = "webhook"
     FEISHU = "feishu"
     WECOM = "wecom"
+    KEYBASE = "keybase"
 
 
 @dataclass
@@ -260,6 +261,9 @@ class GatewayConfig:
                 connected.append(platform)
             # WhatsApp uses enabled flag only (bridge handles auth)
             elif platform == Platform.WHATSAPP:
+                connected.append(platform)
+            # Keybase uses enabled flag only (CLI handles auth)
+            elif platform == Platform.KEYBASE:
                 connected.append(platform)
             # Signal uses extra dict for config (http_url + account)
             elif platform == Platform.SIGNAL and config.extra.get("http_url"):
@@ -884,6 +888,23 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 chat_id=wecom_home,
                 name=os.getenv("WECOM_HOME_CHANNEL_NAME", "Home"),
             )
+
+    # Keybase
+    keybase_enabled = os.getenv("KEYBASE_ENABLED", "").lower() in ("true", "1", "yes")
+    keybase_bin = os.getenv("KEYBASE_BIN", "").strip()
+    if keybase_enabled or keybase_bin:
+        if Platform.KEYBASE not in config.platforms:
+            config.platforms[Platform.KEYBASE] = PlatformConfig()
+        config.platforms[Platform.KEYBASE].enabled = True
+        if keybase_bin:
+            config.platforms[Platform.KEYBASE].extra["binary"] = keybase_bin
+    keybase_home = os.getenv("KEYBASE_HOME_CHANNEL", "").strip()
+    if keybase_home and Platform.KEYBASE in config.platforms:
+        config.platforms[Platform.KEYBASE].home_channel = HomeChannel(
+            platform=Platform.KEYBASE,
+            chat_id=keybase_home,
+            name=os.getenv("KEYBASE_HOME_CHANNEL_NAME", "Home"),
+        )
 
     # Session settings
     idle_minutes = os.getenv("SESSION_IDLE_MINUTES")
