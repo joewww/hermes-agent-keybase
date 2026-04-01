@@ -174,6 +174,14 @@ For native Anthropic auth, Hermes prefers Claude Code's own credential files whe
 | `SIGNAL_HOME_CHANNEL_NAME` | Display name for the Signal home channel |
 | `SIGNAL_IGNORE_STORIES` | Ignore Signal stories/status updates |
 | `SIGNAL_ALLOW_ALL_USERS` | Allow all Signal users without an allowlist |
+| `KEYBASE_ENABLED` | Enable the Keybase adapter (`true`/`false`) |
+| `KEYBASE_BIN` | Path to the keybase CLI binary (default: `keybase` on `$PATH`) |
+| `KEYBASE_HOME` | Keybase profile home dir for subprocesses (useful when service user/profile differs from your shell) |
+| `KEYBASE_RUN_MODE` | Keybase run mode passed to subprocesses (for example `prod`) |
+| `KEYBASE_ALLOWED_USERS` | Comma-separated Keybase usernames allowed to message the bot |
+| `KEYBASE_ALLOW_ALL_USERS` | Allow any logged-in Keybase user without an allowlist |
+| `KEYBASE_HOME_CHANNEL` | Default delivery target for cron jobs (`username` or `team#channel`) |
+| `KEYBASE_HOME_CHANNEL_NAME` | Display name for the Keybase home channel |
 | `TWILIO_ACCOUNT_SID` | Twilio Account SID (shared with telephony skill) |
 | `TWILIO_AUTH_TOKEN` | Twilio Auth Token (shared with telephony skill) |
 | `TWILIO_PHONE_NUMBER` | Twilio phone number in E.164 format (shared with telephony skill) |

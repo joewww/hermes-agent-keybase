@@ -506,6 +506,7 @@ Environment="LOGNAME={username}"
 Environment="PATH={sane_path}"
 Environment="VIRTUAL_ENV={venv_dir}"
 Environment="HERMES_HOME={hermes_home}"
+EnvironmentFile=-{hermes_home}/.env
 Restart=on-failure
 RestartSec=30
 KillMode=mixed
@@ -534,6 +535,7 @@ WorkingDirectory={working_dir}
 Environment="PATH={sane_path}"
 Environment="VIRTUAL_ENV={venv_dir}"
 Environment="HERMES_HOME={hermes_home}"
+EnvironmentFile=-{hermes_home}/.env
 Restart=on-failure
 RestartSec=30
 KillMode=mixed
