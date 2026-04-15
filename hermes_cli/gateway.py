@@ -1727,6 +1727,12 @@ _PLATFORMS = [
         "token_var": "SIGNAL_HTTP_URL",
     },
     {
+        "key": "keybase",
+        "label": "Keybase",
+        "emoji": "🔑",
+        "token_var": "KEYBASE_ENABLED",
+    },
+    {
         "key": "email",
         "label": "Email",
         "emoji": "📧",
@@ -2599,6 +2605,93 @@ def _setup_signal():
     print_info(f"  Groups: {'enabled' if get_env_value('SIGNAL_GROUP_ALLOWED_USERS') else 'disabled'}")
 
 
+def _setup_keybase():
+    """Interactive setup for Keybase messaging."""
+    import shutil
+
+    print()
+    print(color("  ─── 🔑 Keybase Setup ───", Colors.CYAN))
+
+    already_enabled = (get_env_value("KEYBASE_ENABLED") or "").lower() == "true"
+    if already_enabled:
+        print()
+        print_success("Keybase is already configured.")
+        if not prompt_yes_no("  Reconfigure Keybase?", False):
+            return
+
+    # Check whether the keybase CLI is available
+    keybase_bin = get_env_value("KEYBASE_BIN") or "keybase"
+    print()
+    if shutil.which(keybase_bin):
+        print_success(f"keybase CLI found ({keybase_bin}).")
+    else:
+        print_warning(f"keybase CLI not found ({keybase_bin}).")
+        print_info("  Keybase requires the keybase CLI installed and a logged-in session.")
+        print_info("  Install: https://keybase.io/download")
+        print_info("  Log in:  keybase login")
+        print_info("  On headless servers, start the daemon first: run_keybase -g")
+        print()
+        if not prompt_yes_no("  Continue setup anyway? (you can install Keybase later)", True):
+            return
+
+    # Optional: custom binary path
+    print()
+    print_info("  If keybase is not on PATH, enter the full binary path.")
+    print_info("  Leave empty to use 'keybase' from PATH (default).")
+    existing_bin = get_env_value("KEYBASE_BIN") or ""
+    try:
+        bin_path = input(f"  Keybase binary path [{existing_bin or 'keybase'}]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\n  Setup cancelled.")
+        return
+    if bin_path:
+        save_env_value("KEYBASE_BIN", bin_path)
+        print_success(f"  Saved KEYBASE_BIN={bin_path}")
+
+    # Allowed users
+    print()
+    print_info("  The gateway DENIES all users by default for security.")
+    print_info("  Enter Keybase usernames to allow (comma-separated), or leave empty.")
+    existing_allowed = get_env_value("KEYBASE_ALLOWED_USERS") or ""
+    try:
+        allowed = input(f"  Allowed Keybase usernames [{existing_allowed or 'none'}]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\n  Setup cancelled.")
+        return
+    if allowed:
+        save_env_value("KEYBASE_ALLOWED_USERS", allowed)
+        print_success("  Saved — only these users can interact with the bot.")
+    else:
+        print()
+        access_choices = [
+            "Enable open access (anyone who can message the bot can use it)",
+            "Skip for now (bot will deny all users until configured)",
+        ]
+        access_idx = prompt_choice("  How should unauthorized users be handled?", access_choices, 1)
+        if access_idx == 0:
+            save_env_value("KEYBASE_ALLOW_ALL_USERS", "true")
+            print_warning("  Open access enabled.")
+
+    # Home channel for cron delivery
+    print()
+    print_info("  Enter a default delivery target for cron jobs (optional).")
+    print_info("  Format: username  (DM)  or  teamname#channel  (team channel)")
+    existing_home = get_env_value("KEYBASE_HOME_CHANNEL") or ""
+    try:
+        home = input(f"  Home channel [{existing_home or 'empty'}]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print("\n  Setup cancelled.")
+        return
+    if home:
+        save_env_value("KEYBASE_HOME_CHANNEL", home)
+        print_success(f"  Saved KEYBASE_HOME_CHANNEL={home}")
+
+    save_env_value("KEYBASE_ENABLED", "true")
+    print()
+    print_success("🔑 Keybase configured!")
+    print_info("  Verify your session: keybase whoami")
+
+
 def gateway_setup():
     """Interactive setup for messaging platforms + gateway service."""
     if is_managed():
@@ -2660,6 +2753,8 @@ def gateway_setup():
             _setup_whatsapp()
         elif platform["key"] == "signal":
             _setup_signal()
+        elif platform["key"] == "keybase":
+            _setup_keybase()
         elif platform["key"] == "weixin":
             _setup_weixin()
         elif platform["key"] == "feishu":

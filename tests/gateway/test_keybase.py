@@ -75,6 +75,22 @@ class TestKeybaseGatewayAuthorization:
         with patch.dict("os.environ", {}, clear=True):
             assert gw._is_user_authorized(source) is False
 
+    def test_keybase_allow_all_users_flag(self):
+        from gateway.config import GatewayConfig
+        from gateway.run import GatewayRunner
+
+        gw = GatewayRunner.__new__(GatewayRunner)
+        gw.config = GatewayConfig()
+        gw.pairing_store = MagicMock()
+        gw.pairing_store.is_approved.return_value = False
+
+        source = MagicMock()
+        source.platform = Platform.KEYBASE
+        source.user_id = "anyone"
+
+        with patch.dict("os.environ", {"KEYBASE_ALLOW_ALL_USERS": "true"}, clear=True):
+            assert gw._is_user_authorized(source) is True
+
 
 class TestKeybaseSendMessageRouting:
     def test_send_message_schema_mentions_keybase_target(self):

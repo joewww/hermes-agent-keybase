@@ -2255,6 +2255,16 @@ class GatewayRunner:
                 return None
             return BlueBubblesAdapter(config)
 
+        elif platform == Platform.KEYBASE:
+            from gateway.platforms.keybase import KeybaseAdapter, check_keybase_requirements
+            binary = None
+            if hasattr(config, "extra") and isinstance(config.extra, dict):
+                binary = config.extra.get("binary")
+            if not check_keybase_requirements(binary=binary):
+                logger.warning("Keybase: CLI not installed or not logged in%s", f" ({binary})" if binary else "")
+                return None
+            return KeybaseAdapter(config)
+
         return None
     
     def _is_user_authorized(self, source: SessionSource) -> bool:
@@ -2296,6 +2306,7 @@ class GatewayRunner:
             Platform.WECOM_CALLBACK: "WECOM_CALLBACK_ALLOWED_USERS",
             Platform.WEIXIN: "WEIXIN_ALLOWED_USERS",
             Platform.BLUEBUBBLES: "BLUEBUBBLES_ALLOWED_USERS",
+            Platform.KEYBASE: "KEYBASE_ALLOWED_USERS",
         }
         platform_allow_all_map = {
             Platform.TELEGRAM: "TELEGRAM_ALLOW_ALL_USERS",
@@ -2313,6 +2324,7 @@ class GatewayRunner:
             Platform.WECOM_CALLBACK: "WECOM_CALLBACK_ALLOW_ALL_USERS",
             Platform.WEIXIN: "WEIXIN_ALLOW_ALL_USERS",
             Platform.BLUEBUBBLES: "BLUEBUBBLES_ALLOW_ALL_USERS",
+            Platform.KEYBASE: "KEYBASE_ALLOW_ALL_USERS",
         }
 
         # Per-platform allow-all flag (e.g., DISCORD_ALLOW_ALL_USERS=true)
